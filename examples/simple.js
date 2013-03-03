@@ -1,23 +1,16 @@
 var signal = require("../signal")
 var lift = require("../lift")
 var lift2 = require("../lift2")
-var lift3 = require("../lift3")
 
 var frameRates = fps(30)
 var position = MousePosition()
 
-var positionStr = lift(position, function (pos) {
-    return "[x=" + pos.x + ", y=" + pos.y + "]"
-})
-
-var main1 = lift(frameRates, Text)
-var main2 = lift(positionStr, Text)
-var main3 = lift2(frameRates, position, function (rate, pos) {
-    return Form({ x: pos.x + 20, y: pos.y + 20 }, Text(rate))
-})
-
-var main = lift3(main1, main2, main3, function (a, b, c)  {
-    return Combination([a, b, c])
+var main = lift2(frameRates, position, function display(frameRate, pos) {
+    return Combination([
+        Text(frameRate)
+        , Text("[x=" + pos.x + ", y=" + pos.y + "]")
+        , Form({ x: pos.x + 20, y: pos.y + 20 }, Text(frameRate))
+    ])
 })
 
 render(main)
