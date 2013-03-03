@@ -1,6 +1,7 @@
 var signal = require("../signal")
 var lift = require("../lift")
 var lift2 = require("../lift2")
+var lift3 = require("../lift3")
 
 var frameRates = fps(30)
 var position = MousePosition()
@@ -9,35 +10,37 @@ var positionStr = lift(position, function (pos) {
     return "[x=" + pos.x + ", y=" + pos.y + "]"
 })
 
-// var main = lift(frameRates, Text)
-// var main = lift(positionStr, Text)
-var main = lift2(frameRates, position, function (rate, pos) {
+var main1 = lift(frameRates, Text)
+var main2 = lift(positionStr, Text)
+var main3 = lift2(frameRates, position, function (rate, pos) {
     return Form({ x: pos.x + 20, y: pos.y + 20 }, Text(rate))
 })
 
-render(main)
+var main = lift3(main1, main2, main3, function (a, b, c)  {
+    return Combination([a, b, c])
+})
 
-console.log("hi!")
+render(main)
 
 function render(input) {
     var surface = document.createElement("div")
     document.body.appendChild(surface)
 
     input(function render(x) {
+        surface.innerHTML = ""
+
         _render(surface, x)
     })
 
     function _render(surface, x) {
-        surface.innerHTML = ""
-
         var type = x[0]
         if (type === "Text") {
-            renderText(surface, x[1])
+            var div = document.createElement("div")
+            div.textContent = x[1]
+            surface.appendChild(div)
         } else if (type === "Form") {
             var target = document.createElement("div")
             var pos = x[1]
-
-            console.log("pos", pos)
 
             target.style.position = "absolute"
             target.style.top = pos.y + "px"
@@ -46,12 +49,21 @@ function render(input) {
             _render(target, x[2])
 
             surface.appendChild(target)
+        } else if (type === "Combination") {
+            var container = document.createElement("div")
+            var children = x[1]
+
+            children.forEach(function (x) {
+                _render(container, x)
+            })
+
+            surface.appendChild(container)
         }
     }
+}
 
-    function renderText(surface, text) {
-        surface.textContent = text
-    }
+function Combination(list) {
+    return ["Combination", list]
 }
 
 function Form(pos, shape) {
